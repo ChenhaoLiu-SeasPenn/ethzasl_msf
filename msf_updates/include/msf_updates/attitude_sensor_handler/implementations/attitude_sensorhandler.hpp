@@ -44,7 +44,9 @@ AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::AttitudeHandler(
     std::string parameternamespace)
     : SensorHandler<msf_updates::EKFState>(meas, topic_namespace,
                                            parameternamespace),
-      n_m_(1e-6),
+      incl(0),
+	  decl(0),
+	  n_m_(1e-6),
       delay_(0) {
   ros::NodeHandle pnh("~/attitude_sensor");
   pnh.param("attitude_use_fixed_covariance", use_fixed_covariance_, false);
@@ -91,6 +93,18 @@ template<typename MEASUREMENT_TYPE, typename MANAGER_TYPE>
 void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::SetDelay(
     double delay) {
   delay_ = delay;
+}
+
+template<typename MEASUREMENT_TYPE, typename MANAGER_TYPE>
+void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::SetInclination(
+	double incl) {
+	incl_ = incl;
+}
+
+template<typename MEASUREMENT_TYPE, typename MANAGER_TYPE>
+void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::SetDeclination(
+	double decl) {
+	decl_ = decl;
 }
 
 // template<typename MEASUREMENT_TYPE, typename MANAGER_TYPE>
@@ -237,8 +251,8 @@ void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::MeasurementCallback(
     //magConversion_.InitReference(msg->magnetic_field)
     MSF_WARN_STREAM(
         "Initialized Magnetic Field reference of topic: " << this->topic_namespace_ << "/"
-            << subMagneticField_.getTopic() << " to decl/incl: [" << 0
-            << ", " << 0 << "]");
+            << subMagneticField_.getTopic() << " to incl/decl: [" << incl_
+            << ", " << decl_ << "]");
     referenceinit = true;
   }
 

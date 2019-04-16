@@ -194,9 +194,9 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
 
 	Eigen::Matrix<double, 1, 1> beta = state.Get<StateDefinition_T::beta>();
 	Eigen::Matrix<double, 1, 1> alpha = state.Get<StateDefinition_T::alpha>();
-	vecold << sin(beta(0, 0))*cos(alpha(0, 0)), cos(beta(0, 0))*cos(alpha(0, 0)), sin(alpha(0, 0));
-	vecold_dalpha << -sin(beta(0, 0))*sin(alpha(0, 0)), -cos(beta(0, 0))*sin(alpha(0, 0)), cos(alpha(0, 0));
-	vecold_dbeta << cos(beta(0, 0))*cos(alpha(0, 0)), -sin(beta(0, 0))*cos(alpha(0, 0)), 0;
+	vecold << sin(beta(0, 0) + decl_)*cos(alpha(0, 0) + incl_), cos(beta(0, 0) + decl_)*cos(alpha(0, 0)), sin(alpha(0, 0) + incl_);
+	vecold_dalpha << -sin(beta(0, 0) + decl_)*sin(alpha(0, 0) + incl_), -cos(beta(0, 0) + decl_)*sin(alpha(0, 0)), cos(alpha(0, 0) + incl_);
+	vecold_dbeta << cos(beta(0, 0) + decl_)*cos(alpha(0, 0) + incl_), -sin(beta(0, 0) + decl_)*cos(alpha(0, 0) + incl_), 0;
 
     Eigen::Matrix<double, 3, 3> skewold = Skew(C_q * vecold);
     Eigen::Matrix<double, 3, 3> skewold_2 = Skew(C_mi * C_q * vecold);
@@ -336,7 +336,7 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
 	  Eigen::Matrix<double, 3, 3> C_mi = state.Get<StateQimIdx>()
 		  .conjugate().toRotationMatrix();
 	  Eigen::Matrix<double, 3, 1> vecold;
-	  vecold << sin(beta(0, 0))*cos(alpha(0, 0)), cos(beta(0, 0))*cos(alpha(0, 0)), sin(alpha(0, 0));
+	  vecold << sin(beta(0, 0) + decl_)*cos(alpha(0, 0) + incl_), cos(beta(0, 0) + decl_)*cos(alpha(0, 0) + incl_), sin(alpha(0, 0) + incl_);
 	  r_old.block<3, 1>(0, 0) = m_ - C_mi * C_q * vecold;
 
 

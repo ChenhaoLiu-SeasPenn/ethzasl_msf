@@ -51,6 +51,7 @@ class AttitudeSensorHandler : public msf_core::SensorHandler<
   double n_m_;  ///< Attitude measurement noise.
   double delay_;       ///< Delay to be subtracted from the ros-timestamp of
                        //the measurement provided by this sensor.
+  double incl_, decl_; ///< Inclination, declination based on current lon/lat
 
   //ros::Subscriber subPoseWithCovarianceStamped_;
   //ros::Subscriber subTransformStamped_;
@@ -82,18 +83,20 @@ class AttitudeSensorHandler : public msf_core::SensorHandler<
 	  Eigen::Matrix<double, 1, 1> alpha;
 	  double h = hypot(m_.x, m_.y);
 	  alpha << atan2(m_.z, h);
-    return alpha;
+    return alpha - incl_;
   }
 
   Eigen::Matrix<double, 1, 1> GetAzimuthMeasurement() {
 	  Eigen::Matrix<double, 1, 1> beta;
 	  beta << atan2(m_.y, m_.x);
-	  return beta;
+	  return beta - decl_;
   }
 
   // Setters for configure values.
   void SetNoises(double n_m);
   void SetDelay(double delay);
+  void SetInclination(double incl);
+  void SetDeclination(double decl);
   // void AdjustGPSZReference(double current_z);
 };
 }  // namespace msf_attitude_sensor

@@ -133,9 +133,10 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
 
   virtual void Config(Config_T &config, uint32_t level) {
 	  config_ = config;
-	  attitude_handler_->SetNoises(config.attitude_noise_meas_a,
-		  config.attitude_noise_meas_b);
+	  attitude_handler_->SetNoises(config.attitude_noise_meas);
 	  attitude_handler_->SetDelay(config.attitude_delay);
+	  attitude_handler_->SetInclination(config.attitude_inclination);
+	  attitude_handler_->SetDeclination(config.attitude_declination);
 
 	  position_handler_->SetNoises(config.position_noise_meas);
 	  position_handler_->SetDelay(config.position_delay);
