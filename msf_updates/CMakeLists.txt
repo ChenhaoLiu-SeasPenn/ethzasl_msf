@@ -42,6 +42,7 @@ add_subdirectory(src/pose_msf)
 add_subdirectory(src/pose_pressure_msf)
 add_subdirectory(src/position_msf)
 add_subdirectory(src/position_pose_msf)
+add_subdirectory(src/position_attitude_msf)
 add_subdirectory(src/spherical_msf)
 endif()
 
