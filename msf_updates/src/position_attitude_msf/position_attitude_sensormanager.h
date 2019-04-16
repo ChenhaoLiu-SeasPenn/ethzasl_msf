@@ -143,14 +143,15 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
 
 	  if ((level & msf_updates::PositionAttitudeSensor_INIT_FILTER)
 		  && config.core_init_filter == true) {
-		  Init();
+		  Init(1.0);
 		  config.core_init_filter = false;
 	  }
 
   }
 
   /// void Init(double scale)
-  void Init() const {
+  void Init(double scale) const {
+    scale = 1.0;
     Eigen::Matrix<double, 3, 1> p, v, b_w, b_a, g, w_m, a_m, p_ip, p_pos;
 	Eigen::Matrix<double, 1, 1> alpha, beta;
     Eigen::Quaternion<double> q, q_im;
