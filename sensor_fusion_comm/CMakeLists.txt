@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS geometry_msgs message_generation)
 
 add_message_files(
   FILES
+  AttitudeStamped.msg
+  AttitudeWithCovarianceStamped.msg
   DoubleArrayStamped.msg
   DoubleMatrixStamped.msg
   ExtEkf.msg
