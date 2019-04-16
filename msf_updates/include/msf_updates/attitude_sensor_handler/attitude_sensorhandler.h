@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/MagneticField.h>
 // #include <msf_core/gps_conversion.h>
-#include <sensor_fusion_comm/PoseWithCovarianceStamped.h>
+#include <sensor_fusion_comm/AttitudeWithCovarianceStamped.h>
 #include <math.h>
 
 namespace msf_attitude_sensor {
@@ -68,8 +68,8 @@ class AttitudeSensorHandler : public msf_core::SensorHandler<
   bool use_fixed_covariance_;  ///< Use fixed covariance set by dynamic reconfigure.
   bool provides_absolute_measurements_;  ///< Does this sensor measure relative or absolute values.
 
-  // void ProcessPositionMeasurement(
-  //     const sensor_fusion_comm::PointWithCovarianceStampedConstPtr& msg);
+   void ProcessAttitudeMeasurement(
+       const sensor_fusion_comm::AttitudeWithCovarianceStampedConstPtr& msg);
   //void MeasurementCallback(const geometry_msgs::PointStampedConstPtr & msg);
   //void MeasurementCallback(const geometry_msgs::TransformStampedConstPtr & msg);
   void MeasurementCallback(const sensor_msgs::MagneticFieldConstPtr& msg);
@@ -81,15 +81,15 @@ class AttitudeSensorHandler : public msf_core::SensorHandler<
   // Used for the init.
   Eigen::Matrix<double, 1, 1> GetElevationMeasurement() {
 	  Eigen::Matrix<double, 1, 1> alpha;
-	  double h = hypot(m_.x, m_.y);
-	  alpha << atan2(m_.z, h);
-    return alpha - incl_;
+	  double h = hypot(m_(0, 0), m_(0, 1));
+	  alpha << atan2(m_(0, 2), h) - incl_;
+    return alpha;
   }
 
   Eigen::Matrix<double, 1, 1> GetAzimuthMeasurement() {
 	  Eigen::Matrix<double, 1, 1> beta;
-	  beta << atan2(m_.y, m_.x);
-	  return beta - decl_;
+	  beta << atan2(m_(0, 1), m_(0, 0)) - decl_;
+	  return beta;
   }
 
   // Setters for configure values.

@@ -39,13 +39,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace msf_attitude_sensor {
 template<typename MEASUREMENT_TYPE, typename MANAGER_TYPE>
-AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::AttitudeHandler(
+AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::AttitudeSensorHandler(
     MANAGER_TYPE& meas, std::string topic_namespace,
     std::string parameternamespace)
     : SensorHandler<msf_updates::EKFState>(meas, topic_namespace,
                                            parameternamespace),
-      incl(0),
-	  decl(0),
+      incl_(0),
+	  decl_(0),
 	  n_m_(1e-6),
       delay_(0) {
   ros::NodeHandle pnh("~/attitude_sensor");
@@ -115,8 +115,8 @@ void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::SetDeclination(
 
 // TODO: Fix this after finishing measurement code
 template<typename MEASUREMENT_TYPE, typename MANAGER_TYPE>
-void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::ProcessMagneticFieldMeasurement(
-    const sensor_fusion_comm::PoseWithCovarianceStampedConstPtr& msg) {
+void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::ProcessAttitudeMeasurement(
+    const sensor_fusion_comm::AttitudeWithCovarianceStampedConstPtr& msg) {
   received_first_measurement_ = true;
 
   // Get the fixed states.
@@ -126,7 +126,7 @@ void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::ProcessMagneticField
       "larger variable to mark the fixed_states");
   // Do not exceed the 32 bits of int.
 
-  if (!use_fixed_covariance_ && msg->alpha_covariance(0, 0) == 0)  // Take covariance from sensor.
+  if (!use_fixed_covariance_ && msg->magnetic_field_covariance[0] == 0)  // Take covariance from sensor.
       {
     MSF_WARN_STREAM_THROTTLE(
         2, "Provided message type without covariance but set "
@@ -146,13 +146,13 @@ void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::ProcessMagneticField
 
   // TODO: Dynamic configure for magnetometers
   if (mngr) {
-    if (mngr->Getcfg().pose_fixed_q_im) {
+    if (mngr->Getcfg().attitude_fixed_q_im) {
       fixedstates |= 1 << MEASUREMENT_TYPE::AuxState::q_im;
     }
   }
 
   shared_ptr<MEASUREMENT_TYPE> meas(new MEASUREMENT_TYPE(
-      n_m_, use_fixed_covariance_, provides_absolute_measurements_,
+      n_m_, incl_, decl_, use_fixed_covariance_, provides_absolute_measurements_,
       this->sensorID, fixedstates, enable_mah_outlier_rejection_,
       mah_threshold_));
 

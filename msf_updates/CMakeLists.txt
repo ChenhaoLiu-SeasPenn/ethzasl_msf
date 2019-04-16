@@ -22,6 +22,7 @@ generate_dynamic_reconfigure_options(
     cfg/SinglePoseSensor.cfg
     cfg/SinglePositionSensor.cfg
     cfg/SphericalPositionSensor.cfg
+    cfg/PositionAttitudeSensor.cfg
 )
 
 catkin_package(

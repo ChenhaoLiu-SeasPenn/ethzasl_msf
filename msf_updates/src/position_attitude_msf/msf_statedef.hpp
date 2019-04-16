@@ -32,7 +32,7 @@ enum StateDefinition {  //must not manually set the enum values!
   b_w,
   b_a,
   q_im, //Mag-IMU attitude
-  p_ig, //GPS-IMU offset
+  p_ip, //GPS-IMU offset
   alpha,//elevation
   beta  //azimuth
 };
@@ -57,7 +57,7 @@ typedef boost::fusion::vector<
 
     // States not varying during propagation.
 	msf_core::StateVar_T<Eigen::Quaternion<double>, q_im>,  ///< Rotation from the IMU frame to the magetometer frame expressed in the IMU frame.
-    msf_core::StateVar_T<Eigen::Matrix<double, 3, 1>, p_ig>,  ///< Translation from the IMU frame to the GPS frame expressed in the IMU frame.
+    msf_core::StateVar_T<Eigen::Matrix<double, 3, 1>, p_ip>,  ///< Translation from the IMU frame to the GPS frame expressed in the IMU frame.
     msf_core::StateVar_T<Eigen::Matrix<double, 1, 1>, alpha>,  ///< Elevation in magnetometer frame.
     msf_core::StateVar_T<Eigen::Matrix<double, 1, 1>, beta>  ///< Azimuth in magnetometer frame.
 > fullState_T;

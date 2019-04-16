@@ -151,7 +151,7 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
 
   /// void Init(double scale)
   void Init() const {
-    Eigen::Matrix<double, 3, 1> p, v, b_w, b_a, g, w_m, a_m, p_ig, p_pos;
+    Eigen::Matrix<double, 3, 1> p, v, b_w, b_a, g, w_m, a_m, p_ip, p_pos;
 	Eigen::Matrix<double, 1, 1> alpha, beta;
     Eigen::Quaternion<double> q, q_im;
     msf_core::MSF_Core<EKFState_T>::ErrorStateCov P;
@@ -209,10 +209,10 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //MSF_INFO_STREAM("p_ic: " << p_ic.transpose());
     MSF_INFO_STREAM("q_im: " << STREAMQUAT(q_im));
 
-    pnh.param("position_sensor/init/p_ig/x", p_ig[0], 0.0);
-    pnh.param("position_sensor/init/p_ig/y", p_ig[1], 0.0);
-    pnh.param("position_sensor/init/p_ig/z", p_ig[2], 0.0);
-	MSF_INFO_STREAM("p_ig: " << p_ig.transpose());
+    pnh.param("position_sensor/init/p_ip/x", p_ip[0], 0.0);
+    pnh.param("position_sensor/init/p_ip/y", p_ip[1], 0.0);
+    pnh.param("position_sensor/init/p_ip/z", p_ip[2], 0.0);
+	MSF_INFO_STREAM("p_ip: " << p_ip.transpose());
 
     // Calculate initial attitude and position based on sensor measurements
     // here we take the attitude from the pose sensor and augment it with
@@ -220,7 +220,7 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //double yawinit = config_.position_yaw_init / 180 * M_PI;
 
 	// Since we have magnetometer as world attitude sensor, the initial yaw could be determined w.r.t. true north
-	double yawinit = beta;
+	double yawinit = beta(0, 0);
     Eigen::Quaterniond yawq(cos(yawinit / 2), 0, 0, sin(yawinit / 2));
     yawq.normalize();
 
@@ -236,7 +236,7 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //TODO (slynen): what if there is no initial position measurement? Then we
     // have to shift vision-world later on, before applying the first position
     // measurement.
-    p = p_pos - q.toRotationMatrix() * p_ig;
+    p = p_pos - q.toRotationMatrix() * p_ip;
     //p_wv = p - p_vision;  // Shift the vision frame so that it fits the position
     // measurement
 
@@ -266,7 +266,7 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //meas->SetStateInitValue < StateDefinition_T::p_wv > (p_wv);
     meas->SetStateInitValue < StateDefinition_T::q_im > (q_im);
     //meas->SetStateInitValue < StateDefinition_T::p_ic > (p_ic);
-    meas->SetStateInitValue < StateDefinition_T::p_ig > (p_ig);
+    meas->SetStateInitValue < StateDefinition_T::p_ip > (p_ip);
 	meas->SetStateInitValue < StateDefinition_T::alpha > (alpha);
 	meas->SetStateInitValue < StateDefinition_T::beta > (beta);
 
@@ -298,9 +298,9 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //const msf_core::Vector3 npwvv = msf_core::Vector3::Constant(
     //    config_.pose_noise_p_wv);
     const msf_core::Vector3 nqimv = msf_core::Vector3::Constant(
-        config_.pose_noise_q_im);
-    const msf_core::Vector3 npigv = msf_core::Vector3::Constant(
-        config_.pose_noise_p_ig);
+        config_.attitude_noise_q_im);
+    const msf_core::Vector3 npipv = msf_core::Vector3::Constant(
+        config_.position_noise_p_ip);
     //const msf_core::Vector1 n_L = msf_core::Vector1::Constant(
     //    config_.pose_noise_scale);
 
@@ -313,9 +313,9 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //state.GetQBlock<StateDefinition_T::p_wv>() =
     //    (dt * npwvv.cwiseProduct(npwvv)).asDiagonal();
     state.GetQBlock<StateDefinition_T::q_im>() =
-        (dt * nqicv.cwiseProduct(nqicv)).asDiagonal();
-    state.GetQBlock<StateDefinition_T::p_ig>() =
-        (dt * npicv.cwiseProduct(npicv)).asDiagonal();
+        (dt * nqimv.cwiseProduct(nqimv)).asDiagonal();
+    state.GetQBlock<StateDefinition_T::p_ip>() =
+        (dt * npipv.cwiseProduct(npipv)).asDiagonal();
   }
 
   virtual void SetStateCovariance(
@@ -347,7 +347,7 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //  Eigen::Matrix<double, 1, 1> L_;
     //  L_ << 0.1;
     //  delaystate.Set < StateDefinition_T::L > (L_);
-    }
+    //}
   }
 };
 }

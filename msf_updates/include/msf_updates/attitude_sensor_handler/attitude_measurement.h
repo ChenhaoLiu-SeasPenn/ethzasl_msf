@@ -52,7 +52,7 @@ typedef msf_core::MSF_Measurement<sensor_fusion_comm::AttitudeWithCovarianceStam
 
 template<
     //int StateLIdx = EKFState::StateDefinition_T::L,
-    int StateQimIdx = EKFState::StateDefinition_T::q_im,
+    int StateQimIdx = EKFState::StateDefinition_T::q_im
     //int StatePicIdx = EKFState::StateDefinition_T::p_ic,
     //int StateQwvIdx = EKFState::StateDefinition_T::q_wv,
     //int StatePwvIdx = EKFState::StateDefinition_T::p_wv
@@ -70,7 +70,7 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
     H_old.setZero();
 
     // Get measurements.
-	m = Eigen::Matrix<double, nMeasurements, 1>;
+	Eigen::Matrix<double, nMeasurements, 1> m;
 	m << msg->magnetic_field.x, msg->magnetic_field.y, msg->magnetic_field.z;
 
     //if (distorter_) {
@@ -89,7 +89,7 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
               .finished().asDiagonal();
     } else {  // Take covariance from sensor. // Note this is NOT implemented!!!!!
       R_.block<nMeasurements, nMeasurements>(0, 0) = Eigen::Matrix<double, nMeasurements, nMeasurements>(
-          &msg->covariance[0]);
+          &msg->magnetic_field_covariance[0]);
 
       if (msg->header.seq % 100 == 0) {  // Only do this check from time to time.
         if (R_.block<nMeasurements, nMeasurements>(0, 0).determinant() < -0.001)
@@ -125,7 +125,7 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   Eigen::Matrix<double, nMeasurements, 1> m_;  /// Magnetometer seen from world.
-  double n_m_;  /// Elevation and azimuth measurement noise.
+  double n_m_, incl_, decl_;  /// Elevation and azimuth measurement noise.
 
   bool measurement_world_sensor_;
   bool fixed_covariance_;
@@ -149,16 +149,18 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
   };
 
   virtual ~AttitudeMeasurement() {}
-  AttitudeMeasurement(double n_m, bool measurement_world_sensor,
+  AttitudeMeasurement(double n_m, double incl, double decl,
                   bool fixed_covariance, bool isabsoluteMeasurement,
-                  int sensorID, bool enable_mah_outlier_rejection,
-                  double mah_threshold, int fixedstates,
+                  int sensorID, int fixedstates, bool enable_mah_outlier_rejection,
+                  double mah_threshold, 
                   msf_updates::PoseDistorter::Ptr distorter =
                       msf_updates::PoseDistorter::Ptr())
       : AttitudeMeasurementBase(isabsoluteMeasurement, sensorID,
                             enable_mah_outlier_rejection, mah_threshold),
         n_m_(n_m),
-        measurement_world_sensor_(measurement_world_sensor),
+	incl_(incl),
+	decl_(decl),
+        measurement_world_sensor_(true),
         fixed_covariance_(fixed_covariance),
         distorter_(distorter),
         fixedstates_(fixedstates) {}
@@ -194,9 +196,11 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
 
 	Eigen::Matrix<double, 1, 1> beta = state.Get<StateDefinition_T::beta>();
 	Eigen::Matrix<double, 1, 1> alpha = state.Get<StateDefinition_T::alpha>();
-	vecold << sin(beta(0, 0) + decl_)*cos(alpha(0, 0) + incl_), cos(beta(0, 0) + decl_)*cos(alpha(0, 0)), sin(alpha(0, 0) + incl_);
-	vecold_dalpha << -sin(beta(0, 0) + decl_)*sin(alpha(0, 0) + incl_), -cos(beta(0, 0) + decl_)*sin(alpha(0, 0)), cos(alpha(0, 0) + incl_);
-	vecold_dbeta << cos(beta(0, 0) + decl_)*cos(alpha(0, 0) + incl_), -sin(beta(0, 0) + decl_)*cos(alpha(0, 0) + incl_), 0;
+	double beta_d = beta(0, 0);
+	double alpha_d = alpha(0, 0);
+	vecold << sin(beta_d + decl_)*cos(alpha_d + incl_), cos(beta_d + decl_)*cos(alpha_d), sin(alpha_d + incl_);
+	vecold_dalpha << -sin(beta_d + decl_)*sin(alpha_d + incl_), -cos(beta_d + decl_)*sin(alpha_d), cos(alpha_d + incl_);
+	vecold_dbeta << cos(beta_d + decl_)*cos(alpha_d + incl_), -sin(beta_d + decl_)*cos(alpha_d + incl_), 0;
 
     Eigen::Matrix<double, 3, 3> skewold = Skew(C_q * vecold);
     Eigen::Matrix<double, 3, 3> skewold_2 = Skew(C_mi * C_q * vecold);
@@ -336,7 +340,11 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
 	  Eigen::Matrix<double, 3, 3> C_mi = state.Get<StateQimIdx>()
 		  .conjugate().toRotationMatrix();
 	  Eigen::Matrix<double, 3, 1> vecold;
-	  vecold << sin(beta(0, 0) + decl_)*cos(alpha(0, 0) + incl_), cos(beta(0, 0) + decl_)*cos(alpha(0, 0) + incl_), sin(alpha(0, 0) + incl_);
+	Eigen::Matrix<double, 1, 1> beta = state.Get<StateDefinition_T::beta>();
+	Eigen::Matrix<double, 1, 1> alpha = state.Get<StateDefinition_T::alpha>();
+	double beta_d = beta(0, 0);
+	double alpha_d = alpha(0, 0);
+	  vecold << sin(beta_d + decl_)*cos(alpha_d + incl_), cos(beta_d + decl_)*cos(alpha_d + incl_), sin(alpha_d + incl_);
 	  r_old.block<3, 1>(0, 0) = m_ - C_mi * C_q * vecold;
 
 
