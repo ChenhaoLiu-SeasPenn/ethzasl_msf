@@ -15,8 +15,8 @@
 	    	
 	<remap from="msf_core/imu_state_input" to="/rec_imu/recImu" />
 
-        <remap from="msf_updates/magneticfield_input" to="/imu/magnetic_field>
-        <!--remap from="msf_core/hl_state_input" to="/auk/fcu/ekf_state_out" /--> <!--HL STATE-->
+        <remap from="msf_updates/magneticfield_input" to="/imu/magnetic_field" />
+        <!--remap from="msf_core/hl_state_input" to="/auk/fcu/ekf_state_out"/--> <!--HL STATE-->
         <!--remap from="msf_core/correction" to="/auk/fcu/ekf_state_in"/-->
   			
         <!--remap from="msf_core/imu_state_input" to="/imu0" /--> <!--SLAM SENSOR IMU-->

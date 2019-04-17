@@ -75,11 +75,11 @@ AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::AttitudeSensorHandler(
   //("transform_input", 20, &MagneticFieldSensorHandler::MeasurementCallback, this);
   subMagneticField_ =
       nh.subscribe<sensor_msgs::MagneticField>
-  ("mageticfield_input", 20, &AttitudeSensorHandler::MeasurementCallback, this);
+  ("magneticfield_input", 20, &AttitudeSensorHandler::MeasurementCallback, this);
 
   //z_q_.setZero();
 
-  m_ << 0, 0, 0;
+  m_ << 0, 1, 0;
 
 }
 
@@ -158,6 +158,7 @@ void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::ProcessAttitudeMeasu
 
   meas->MakeFromSensorReading(msg, msg->header.stamp.toSec() - delay_);
 
+  // MSF_INFO_STREAM("*** Getting magnetometer reading" << meas->m_);
   m_ = meas->m_;  // Store this for the init procedure.
 
   this->manager_.msf_core_->AddMeasurement(meas);
@@ -270,6 +271,7 @@ void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::MeasurementCallback(
   attwCov->header = msg->header;
 
   // Store the ENU data in the position fields.
+  // MSF_INFO_STREAM("Magnetometer sensor reading:" << msg->magnetic_field);
   attwCov->magnetic_field = msg->magnetic_field;
   attwCov->magnetic_field_covariance = msg->magnetic_field_covariance;
   //attwCov->alpha(0, 0) = alpha(0, 0);

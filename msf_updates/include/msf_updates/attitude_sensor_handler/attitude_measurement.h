@@ -72,6 +72,7 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
     // Get measurements.
 	Eigen::Matrix<double, nMeasurements, 1> m;
 	m << msg->magnetic_field.x, msg->magnetic_field.y, msg->magnetic_field.z;
+        m_ = m;
 
     //if (distorter_) {
     //  static double tlast = 0;
@@ -386,6 +387,7 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
       }
 
       // Call update step in base class.
+      MSF_INFO_STREAM("!!!!!!!!Applying update with magnetometer data. Measurement:" << m_ <<"Residual: " << r_old);
       this->CalculateAndApplyCorrection(state_nonconst_new, core, H_new, r_old,
                                         R_);
     } else {

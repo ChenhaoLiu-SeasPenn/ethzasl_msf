@@ -153,7 +153,7 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
   void Init(double scale) const {
     scale = 1.0;
     Eigen::Matrix<double, 3, 1> p, v, b_w, b_a, g, w_m, a_m, p_ip, p_pos;
-	Eigen::Matrix<double, 1, 1> alpha, beta;
+    Eigen::Matrix<double, 1, 1> alpha, beta;
     Eigen::Quaternion<double> q, q_im;
     msf_core::MSF_Core<EKFState_T>::ErrorStateCov P;
 
@@ -174,11 +174,11 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
 
     //p_vc = pose_handler_->GetPositionMeasurement();
     //q_vc = pose_handler_->GetAttitudeMeasurement();
-	alpha = attitude_handler_->GetElevationMeasurement();
-	beta = attitude_handler_->GetAzimuthMeasurement();
+    alpha = attitude_handler_->GetElevationMeasurement();
+    beta = attitude_handler_->GetAzimuthMeasurement();
 
     MSF_INFO_STREAM(
-        "initial measurement magnetometer: elevation:["<<alpha<<"] azimuth: " <<beta);
+        "initial measurement magnetometer: elevation:["<<alpha<<" azimuth: " <<beta << "]");
     MSF_INFO_STREAM(
         "initial measurement position: pos:["<<p_pos.transpose()<<"]");
 

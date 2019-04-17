@@ -83,12 +83,14 @@ class AttitudeSensorHandler : public msf_core::SensorHandler<
 	  Eigen::Matrix<double, 1, 1> alpha;
 	  double h = hypot(m_(0, 0), m_(0, 1));
 	  alpha << atan2(m_(0, 2), h) - incl_;
+	  MSF_INFO_STREAM_ONCE("!!!!!!Getting init elevation:" << alpha);
     return alpha;
   }
 
   Eigen::Matrix<double, 1, 1> GetAzimuthMeasurement() {
 	  Eigen::Matrix<double, 1, 1> beta;
 	  beta << atan2(m_(0, 1), m_(0, 0)) - decl_;
+	  MSF_INFO_STREAM_ONCE("!!!!!!Getting init azimuth:" << beta);
 	  return beta;
   }
 
