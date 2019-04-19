@@ -146,9 +146,10 @@ void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::ProcessAttitudeMeasu
 
   // TODO: Dynamic configure for magnetometers
   if (mngr) {
-    if (mngr->Getcfg().attitude_fixed_q_im) {
-      fixedstates |= 1 << MEASUREMENT_TYPE::AuxState::q_im;
-    }
+    MSF_INFO_STREAM_ONCE("Empty.");
+    //if (mngr->Getcfg().attitude_fixed_q_im) {
+      //fixedstates |= 1 << MEASUREMENT_TYPE::AuxState::q_im;
+    //}
   }
 
   shared_ptr<MEASUREMENT_TYPE> meas(new MEASUREMENT_TYPE(
@@ -159,7 +160,7 @@ void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::ProcessAttitudeMeasu
   meas->MakeFromSensorReading(msg, msg->header.stamp.toSec() - delay_);
 
   // MSF_INFO_STREAM("*** Getting magnetometer reading" << meas->m_);
-  m_ = meas->m_;  // Store this for the init procedure.
+  m_ = meas->m_ / meas->m_.norm();  // Store this for the init procedure.
 
   this->manager_.msf_core_->AddMeasurement(meas);
 }

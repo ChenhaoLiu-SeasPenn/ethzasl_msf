@@ -28,6 +28,7 @@
 #include <msf_updates/position_sensor_handler/position_sensorhandler.h>
 #include <msf_updates/position_sensor_handler/position_measurement.h>
 #include <msf_updates/PositionAttitudeSensorConfig.h>
+#include <math.h>
 
 namespace msf_updates {
 
@@ -154,7 +155,7 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     scale = 1.0;
     Eigen::Matrix<double, 3, 1> p, v, b_w, b_a, g, w_m, a_m, p_ip, p_pos;
     Eigen::Matrix<double, 1, 1> alpha, beta;
-    Eigen::Quaternion<double> q, q_im;
+    Eigen::Quaternion<double> q; // q_im;
     msf_core::MSF_Core<EKFState_T>::ErrorStateCov P;
 
     // init values
@@ -176,9 +177,15 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //q_vc = pose_handler_->GetAttitudeMeasurement();
     alpha = attitude_handler_->GetElevationMeasurement();
     beta = attitude_handler_->GetAzimuthMeasurement();
+    double beta_d = beta(0, 0);
+	double alpha_d = alpha(0, 0);
+    double incl = attitude_handler_->GetInclination();
+    double decl = attitude_handler_->GetDeclination();
+    Eigen::Matrix<double, 3, 1> vecold;
+	vecold << sin(beta_d + decl)*cos(alpha_d + incl), cos(beta_d + decl)*cos(alpha_d), sin(alpha_d + incl);
 
     MSF_INFO_STREAM(
-        "initial measurement magnetometer: elevation:["<<alpha<<" azimuth: " <<beta << "]");
+        "initial measurement magnetometer: elevation:["<<alpha<<" azimuth: " <<beta << "]" << "Predicted magnetometer measurement:[" << vecold << "]");
     MSF_INFO_STREAM(
         "initial measurement position: pos:["<<p_pos.transpose()<<"]");
 
@@ -201,7 +208,7 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //pnh.param("pose_sensor/init/q_ic/y", q_ic.y(), 0.0);
     //pnh.param("pose_sensor/init/q_ic/z", q_ic.z(), 0.0);
     //q_ic.normalize();
-
+/*
 	pnh.param("attitude_sensor/init/q_im/w", q_im.w(), 1.0);
 	pnh.param("attitude_sensor/init/q_im/x", q_im.x(), 0.0);
 	pnh.param("attitude_sensor/init/q_im/y", q_im.y(), 0.0);
@@ -209,7 +216,7 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
 
     //MSF_INFO_STREAM("p_ic: " << p_ic.transpose());
     MSF_INFO_STREAM("q_im: " << STREAMQUAT(q_im));
-
+*/
     pnh.param("position_sensor/init/p_ip/x", p_ip[0], 0.0);
     pnh.param("position_sensor/init/p_ip/y", p_ip[1], 0.0);
     pnh.param("position_sensor/init/p_ip/z", p_ip[2], 0.0);
@@ -218,7 +225,6 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     // Calculate initial attitude and position based on sensor measurements
     // here we take the attitude from the pose sensor and augment it with
     // global yaw init.
-    //double yawinit = config_.position_yaw_init / 180 * M_PI;
 
 	// Since we have magnetometer as world attitude sensor, the initial yaw could be determined w.r.t. true north
 	double yawinit = beta(0, 0);
@@ -265,7 +271,7 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //    > (Eigen::Matrix<double, 1, 1>::Constant(scale));
     //meas->SetStateInitValue < StateDefinition_T::q_wv > (q_wv);
     //meas->SetStateInitValue < StateDefinition_T::p_wv > (p_wv);
-    meas->SetStateInitValue < StateDefinition_T::q_im > (q_im);
+    //meas->SetStateInitValue < StateDefinition_T::q_im > (q_im);
     //meas->SetStateInitValue < StateDefinition_T::p_ic > (p_ic);
     meas->SetStateInitValue < StateDefinition_T::p_ip > (p_ip);
 	meas->SetStateInitValue < StateDefinition_T::alpha > (alpha);
@@ -298,8 +304,8 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //    config_.pose_noise_q_wv);
     //const msf_core::Vector3 npwvv = msf_core::Vector3::Constant(
     //    config_.pose_noise_p_wv);
-    const msf_core::Vector3 nqimv = msf_core::Vector3::Constant(
-        config_.attitude_noise_q_im);
+    //const msf_core::Vector3 nqimv = msf_core::Vector3::Constant(
+    //    config_.attitude_noise_q_im);
     const msf_core::Vector3 npipv = msf_core::Vector3::Constant(
         config_.position_noise_p_ip);
     //const msf_core::Vector1 n_L = msf_core::Vector1::Constant(
@@ -313,8 +319,8 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //    (dt * nqwvv.cwiseProduct(nqwvv)).asDiagonal();
     //state.GetQBlock<StateDefinition_T::p_wv>() =
     //    (dt * npwvv.cwiseProduct(npwvv)).asDiagonal();
-    state.GetQBlock<StateDefinition_T::q_im>() =
-        (dt * nqimv.cwiseProduct(nqimv)).asDiagonal();
+    //state.GetQBlock<StateDefinition_T::q_im>() =
+    //    (dt * nqimv.cwiseProduct(nqimv)).asDiagonal();
     state.GetQBlock<StateDefinition_T::p_ip>() =
         (dt * npipv.cwiseProduct(npipv)).asDiagonal();
   }

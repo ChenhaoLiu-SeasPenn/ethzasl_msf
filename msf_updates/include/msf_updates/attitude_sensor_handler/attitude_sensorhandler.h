@@ -81,18 +81,21 @@ class AttitudeSensorHandler : public msf_core::SensorHandler<
   // Used for the init.
   Eigen::Matrix<double, 1, 1> GetElevationMeasurement() {
 	  Eigen::Matrix<double, 1, 1> alpha;
-	  double h = hypot(m_(0, 0), m_(0, 1));
-	  alpha << atan2(m_(0, 2), h) - incl_;
-	  MSF_INFO_STREAM_ONCE("!!!!!!Getting init elevation:" << alpha);
+	  double h = hypot(m_(0, 0), m_(1, 0));
+	  alpha << atan2(m_(2, 0), h) - incl_;
+	  MSF_INFO_STREAM("!!!!!!Getting init elevation:" << m_(2, 0) << " " << h << " " << atan2(m_(2, 0), h) << "Using message:" << m_);
     return alpha;
   }
 
   Eigen::Matrix<double, 1, 1> GetAzimuthMeasurement() {
 	  Eigen::Matrix<double, 1, 1> beta;
-	  beta << atan2(m_(0, 1), m_(0, 0)) - decl_;
-	  MSF_INFO_STREAM_ONCE("!!!!!!Getting init azimuth:" << beta);
+	  beta << atan2(m_(1, 0), m_(0, 0)) - decl_;
+	  MSF_INFO_STREAM("!!!!!!Getting init azimuth:"<< m_(1, 0) << " " << m_(0, 0) << " "  << atan2(m_(1, 0), m_(0, 0)) << "decl_" << decl_ << "Using message:" << m_);
 	  return beta;
   }
+  
+  double GetInclination() {return incl_;}
+  double GetDeclination() {return decl_;}
 
   // Setters for configure values.
   void SetNoises(double n_m);

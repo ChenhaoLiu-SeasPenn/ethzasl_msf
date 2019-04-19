@@ -52,8 +52,8 @@ typedef msf_core::MSF_Measurement<sensor_fusion_comm::AttitudeWithCovarianceStam
 
 template<
     //int StateLIdx = EKFState::StateDefinition_T::L,
-    int StateQimIdx = EKFState::StateDefinition_T::q_im
-    //int StatePicIdx = EKFState::StateDefinition_T::p_ic,
+    //int StateQimIdx = EKFState::StateDefinition_T::q_im
+    int StatePipIdx = EKFState::StateDefinition_T::p_ip
     //int StateQwvIdx = EKFState::StateDefinition_T::q_wv,
     //int StatePwvIdx = EKFState::StateDefinition_T::p_wv
     >
@@ -72,7 +72,7 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
     // Get measurements.
 	Eigen::Matrix<double, nMeasurements, 1> m;
 	m << msg->magnetic_field.x, msg->magnetic_field.y, msg->magnetic_field.z;
-        m_ = m;
+        m_ = m / m.norm();
 
     //if (distorter_) {
     //  static double tlast = 0;
@@ -145,9 +145,9 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
   //  p_wv = StatePwvIdx
   //};
 
-  enum AuxState {
+  /*enum AuxState {
 	  q_im = StateQimIdx
-  };
+  };*/
 
   virtual ~AttitudeMeasurement() {}
   AttitudeMeasurement(double n_m, double incl, double decl,
@@ -184,8 +184,8 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
     Eigen::Matrix<double, 3, 3> C_q = state.Get<StateDefinition_T::q>()
         .toRotationMatrix();
 
-    Eigen::Matrix<double, 3, 3> C_mi = state.Get<StateQimIdx>()
-        .conjugate().toRotationMatrix();
+    //Eigen::Matrix<double, 3, 3> C_mi = state.Get<StateQimIdx>()
+    //    .conjugate().toRotationMatrix();
 
     // Preprocess for elements in H matrix.
     Eigen::Matrix<double, 3, 1> vecold;
@@ -204,7 +204,7 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
 	vecold_dbeta << cos(beta_d + decl_)*cos(alpha_d + incl_), -sin(beta_d + decl_)*cos(alpha_d + incl_), 0;
 
     Eigen::Matrix<double, 3, 3> skewold = Skew(C_q * vecold);
-    Eigen::Matrix<double, 3, 3> skewold_2 = Skew(C_mi * C_q * vecold);
+    //Eigen::Matrix<double, 3, 3> skewold_2 = Skew(C_mi * C_q * vecold);
 
     //Eigen::Matrix<double, 3, 3> pci_sk = Skew(state.Get<StatePicIdx>());
 
@@ -224,8 +224,8 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
       //    StateQwvIdx>::value,
       //kIdxstartcorr_pwv = msf_tmp::GetStartIndexInCorrection<StateSequence_T,
       //    StatePwvIdx>::value,
-      kIdxstartcorr_qim = msf_tmp::GetStartIndexInCorrection<StateSequence_T,
-          StateQimIdx>::value,
+      //kIdxstartcorr_qim = msf_tmp::GetStartIndexInCorrection<StateSequence_T,
+      //    StateQimIdx>::value,
 	  kIdxstartcorr_alpha = msf_tmp::GetStartIndexInCorrection<StateSequence_T,
 		  StateDefinition_T::alpha>::value,
 	  kIdxstartcorr_beta = msf_tmp::GetStartIndexInCorrection<StateSequence_T,
@@ -237,7 +237,7 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
     // Read the fixed states flags.
     //bool scalefix = (fixedstates_ & 1 << StateLIdx);
     //bool calibposfix = (fixedstates_ & 1 << StatePicIdx);
-    bool calibattfix = (fixedstates_ & 1 << StateQimIdx);
+    //bool calibattfix = (fixedstates_ & 1 << StateQimIdx);
     //bool driftwvattfix = (fixedstates_ & 1 << StateQwvIdx);
     //bool driftwvposfix = (fixedstates_ & 1 << StatePwvIdx);
 
@@ -246,8 +246,8 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
     //  state_in->ClearCrossCov<StateLIdx>();
     //if (calibposfix)
     //  state_in->ClearCrossCov<StatePicIdx>();
-    if (calibattfix)
-      state_in->ClearCrossCov<StateQimIdx>();
+    //if (calibattfix)
+    //  state_in->ClearCrossCov<StateQimIdx>();
     //if (driftwvattfix)
     //  state_in->ClearCrossCov<StateQwvIdx>();
     //if (driftwvposfix)
@@ -255,10 +255,10 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
 
 
     // Construct H matrix.
-	H.block<3, 3>(0, kIdxstartcorr_q) = C_mi * skewold;
-	H.block<3, 3>(0, kIdxstartcorr_qim) = skewold_2;
-	H.block<3, 1>(0, kIdxstartcorr_alpha) = C_mi * C_q * vecold_dalpha;
-	H.block<3, 1>(0, kIdxstartcorr_beta) = C_mi * C_q * vecold_dbeta;
+	H.block<3, 3>(0, kIdxstartcorr_q) = skewold;
+	//H.block<3, 3>(0, kIdxstartcorr_qim) = skewold_2;
+	H.block<3, 1>(0, kIdxstartcorr_alpha) = C_q * vecold_dalpha;
+	H.block<3, 1>(0, kIdxstartcorr_beta) = C_q * vecold_dbeta;
 
  //   // Position:
 	//H.block<3, 3>(0, kIdxstartcorr_p) = C_wv;
@@ -338,15 +338,15 @@ struct AttitudeMeasurement : public AttitudeMeasurementBase {
 
       Eigen::Matrix<double, 3, 3> C_q = state.Get<StateDefinition_T::q>()
           .conjugate().toRotationMatrix();
-	  Eigen::Matrix<double, 3, 3> C_mi = state.Get<StateQimIdx>()
-		  .conjugate().toRotationMatrix();
+	  //Eigen::Matrix<double, 3, 3> C_mi = state.Get<StateQimIdx>()
+		//  .conjugate().toRotationMatrix();
 	  Eigen::Matrix<double, 3, 1> vecold;
 	Eigen::Matrix<double, 1, 1> beta = state.Get<StateDefinition_T::beta>();
 	Eigen::Matrix<double, 1, 1> alpha = state.Get<StateDefinition_T::alpha>();
 	double beta_d = beta(0, 0);
 	double alpha_d = alpha(0, 0);
 	  vecold << sin(beta_d + decl_)*cos(alpha_d + incl_), cos(beta_d + decl_)*cos(alpha_d + incl_), sin(alpha_d + incl_);
-	  r_old.block<3, 1>(0, 0) = m_ - C_mi * C_q * vecold;
+	  r_old.block<3, 1>(0, 0) = m_ - C_q * vecold;
 
 
       // Construct residuals.
