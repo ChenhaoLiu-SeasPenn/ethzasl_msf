@@ -153,7 +153,7 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
   /// void Init(double scale)
   void Init(double scale) const {
     scale = 1.0;
-    Eigen::Matrix<double, 3, 1> p, v, b_w, b_a, g, w_m, a_m, p_ip, p_pos;
+    Eigen::Matrix<double, 3, 1> p, v, b_w, b_a, g, w_m, a_m, p_ip, p_pos, m;
     Eigen::Matrix<double, 1, 1> alpha, beta;
     Eigen::Quaternion<double> q; // q_im;
     msf_core::MSF_Core<EKFState_T>::ErrorStateCov P;
@@ -177,12 +177,14 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     //q_vc = pose_handler_->GetAttitudeMeasurement();
     alpha = attitude_handler_->GetElevationMeasurement();
     beta = attitude_handler_->GetAzimuthMeasurement();
+	m = attitude_handler_->GetMagneticFieldMeasurement();
     double beta_d = beta(0, 0);
 	double alpha_d = alpha(0, 0);
     double incl = attitude_handler_->GetInclination();
     double decl = attitude_handler_->GetDeclination();
+	MSF_INFO_STREAM("Sanity Check:" << alpha_d << " " << incl << " " << beta_d << " " << decl);
     Eigen::Matrix<double, 3, 1> vecold;
-	vecold << sin(beta_d + decl)*cos(alpha_d + incl), cos(beta_d + decl)*cos(alpha_d), sin(alpha_d + incl);
+	vecold << sin(beta_d)*cos(alpha_d), cos(beta_d)*cos(alpha_d), sin(alpha_d);
 
     MSF_INFO_STREAM(
         "initial measurement magnetometer: elevation:["<<alpha<<" azimuth: " <<beta << "]" << "Predicted magnetometer measurement:[" << vecold << "]");
@@ -227,8 +229,9 @@ class PositionAttitudeSensorManager : public msf_core::MSF_SensorManagerROS<
     // global yaw init.
 
 	// Since we have magnetometer as world attitude sensor, the initial yaw could be determined w.r.t. true north
-	double yawinit = beta(0, 0);
-    Eigen::Quaterniond yawq(cos(yawinit / 2), 0, 0, sin(yawinit / 2));
+	double yawinit = 0;
+    //Eigen::Quaterniond yawq(cos(yawinit / 2), 0, 0, sin(yawinit / 2));
+    Eigen::Quaterniond yawq.setFromTwoVectors(vecold, m);
     yawq.normalize();
 
     q = yawq;

@@ -97,6 +97,8 @@ class AttitudeSensorHandler : public msf_core::SensorHandler<
   double GetInclination() {return incl_;}
   double GetDeclination() {return decl_;}
 
+  Eigen::Matrix<double, 3, 1> GetMagneticFieldMeasurement { return m_; }
+
   // Setters for configure values.
   void SetNoises(double n_m);
   void SetDelay(double delay);

@@ -161,6 +161,7 @@ void AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::ProcessAttitudeMeasu
 
   // MSF_INFO_STREAM("*** Getting magnetometer reading" << meas->m_);
   m_ = meas->m_ / meas->m_.norm();  // Store this for the init procedure.
+  meas->m_ /= meas->m_.norm();
 
   this->manager_.msf_core_->AddMeasurement(meas);
 }
