@@ -27,6 +27,7 @@ else()
   add_custom_target(${MSF_DOCUMENTATION})
 endif(DOXYGEN_FOUND)
 
+message("!!!!!!!!!!!!!!!!!!!!!!!!!!" ${Eigen_INCLUDE_DIRS})
 include_directories(include ${Eigen_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
