@@ -79,7 +79,7 @@ AttitudeSensorHandler<MEASUREMENT_TYPE, MANAGER_TYPE>::AttitudeSensorHandler(
 
   //z_q_.setZero();
 
-  m_ << 0, 1, 0;
+  m_ << sin(decl_)*cos(incl_), cos(decl_)*cos(incl_), sin(incl_);
 
 }
 
